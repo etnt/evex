@@ -4,7 +4,7 @@ A simple example using gen_event for a "system monitoring" scenario.
 We'll have an event manager that dispatches system events
 (e.g., cpu_usage, memory_alert), and different handlers will react to them.
 
-Let's run the example:
+Let's run the example (NOTE: you can also run them as a Lux test by issue the command: `make test` ):
 
 ```erlang
 4> evex_monitor_event_manager:start_link().
@@ -97,8 +97,8 @@ The terminate functions of the remaining handlers are called.
 
 This example clearly illustrates:
 
-    * How a single gen_event manager dispatches events.
-    * How multiple, independent handlers can be attached.
-    * How each handler applies its own logic to the same event.
-    * The dynamic nature of adding/removing handlers.
+* How a single gen_event manager dispatches events.
+* How multiple, independent handlers can be attached.
+* How each handler applies its own logic to the same event.
+* The dynamic nature of adding/removing handlers.
 

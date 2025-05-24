@@ -1,0 +1,83 @@
+[doc Test Erlang Event Manager Example from README]
+
+[global eprompt=\d+>\s]
+
+[shell erl_session]
+    !erl -pa ../ebin
+    ?Erlang/OTP.*
+    ?Eshell.*
+    ?$eprompt
+
+    # Start the event manager
+    !evex_monitor_event_manager:start_link().
+    ?{ok,<.*>}
+    ?$eprompt
+
+    # Add console logger handler
+    !gen_event:add_handler(evex_monitor_event_manager, evex_console_logger, []).
+    ?<.*>: Console Logger Initialized
+    ?ok
+    ?$eprompt
+
+    # Add alert sender handler
+    !gen_event:add_handler(evex_monitor_event_manager, evex_alert_sender, []).
+    ?<.*>: Alert Sender Initialized
+    ?ok
+    ?$eprompt
+
+    # Check which handlers are registered
+    !gen_event:which_handlers(evex_monitor_event_manager).
+    ?\[evex_alert_sender,evex_console_logger\]
+    ?$eprompt
+
+    # Test normal CPU usage (only console logger reacts)
+    !evex_monitor_event_manager:notify(cpu_usage, 50).
+    ?<.*>: CPU Usage: 50%
+    ?ok
+    ?$eprompt
+
+    # Test high CPU usage (console logger alerts)
+    !evex_monitor_event_manager:notify(cpu_usage, 85).
+    ?<.*>: ALERT! High CPU Usage: 85%
+    ?$eprompt
+
+    # Test critical CPU usage (both handlers react)
+    !evex_monitor_event_manager:notify(cpu_usage, 95).
+    ?<.*>: \[ALERT SENDER\] Sending CRITICAL CPU Alert for 95% usage!
+    ?<.*>: ALERT! High CPU Usage: 95%
+    ?$eprompt
+
+    # Test memory alert (both handlers react)
+    !evex_monitor_event_manager:notify(memory_alert, {1024, 1500}).
+    ?<.*>: \[ALERT SENDER\] Sending MEMORY Alert! \(Threshold: 1024, Current: 1500\)
+    ?<.*>: MEMORY ALERT! Threshold: 1024MB, Current: 1500MB
+    ?$eprompt
+
+    # Test unknown event (only console logger handles)
+    !evex_monitor_event_manager:notify(disk_io, {read, 100}).
+    ?<.*>: Received unknown event: {disk_io,{read,100}}
+    ?$eprompt
+
+    # Remove console logger handler
+    !gen_event:delete_handler(evex_monitor_event_manager, evex_console_logger, []).
+    ?<.*>: Console Logger Terminated
+    ?$eprompt
+
+    # Test CPU usage with only alert sender (no console output for normal usage)
+    !evex_monitor_event_manager:notify(cpu_usage, 70).
+    ?$eprompt
+
+    # Test critical CPU usage with only alert sender
+    !evex_monitor_event_manager:notify(cpu_usage, 98).
+    ?<.*>: \[ALERT SENDER\] Sending CRITICAL CPU Alert for 98% usage!
+    ?$eprompt
+
+    # Stop the event manager
+    !evex_monitor_event_manager:stop().
+    ?<.*>: Alert Sender Terminated. Total alerts sent: 3
+    ?$eprompt
+
+    # Exit Erlang
+    !init:stop().
+
+[cleanup]

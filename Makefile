@@ -23,4 +23,23 @@ clean:
 # Rebuild everything
 rebuild: clean all
 
-.PHONY: all clean rebuild
+test: lux-dep lux_test
+
+lux_test:
+	(cd test; ../deps/lux/bin/lux readme.lux)
+
+clean-deps:
+	rm -rf deps
+
+lux-dep:
+	@if [ ! -d deps/lux ]; then \
+		mkdir -p deps; \
+        cd deps; \
+        git clone https://github.com/hawk/lux.git; \
+        cd lux; \
+        autoconf; \
+        ./configure; \
+        make; \
+    fi
+        
+.PHONY: all clean rebuild lux_test lux-dep clean-deps
